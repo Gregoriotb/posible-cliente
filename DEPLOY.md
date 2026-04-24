@@ -18,47 +18,26 @@
 ## Paso 1 — Neon (DB)
 
 1. Crear cuenta en [neon.tech](https://neon.tech) (free tier: 0.5 GB + 190h compute/mes).
-2. **New Project** → nombre: `artificialic-budget` → región: la más cercana al backend (ej `aws-us-east-2`).
-3. En **Dashboard > Connection Details**, activar **"Connection pooling"** (recomendado) y copiar la connection string. Formato crudo que entrega Neon:
+2. **New Project** → nombre: `artificialic-budget` → región: la más cercana al backend.
+3. En **Dashboard > Connect** (o "Connection Details"), cambiar el dropdown del formato a **"Connection string"** (no "Parameters only"), activar **"Connection pooling"**, y copiar la URL completa. Será algo como:
    ```
-   postgresql://<USER>:<PASSWORD>@ep-<slug>-pooler.<region>.aws.neon.tech/<DB>?sslmode=require&channel_binding=require
+   postgresql://neondb_owner:<PASSWORD>@ep-<slug>-pooler.<region>.aws.neon.tech/neondb?sslmode=require&channel_binding=require
    ```
-   > **Nota:** el `<region>` que aparece en el hostname puede no coincidir con la región que elegiste en la UI (p.ej. elegiste `us-east-2` y el hostname dice `us-east-1`). Es esperado — Neon asigna el compute pool más cercano disponible. El servicio funciona igual; no lo toques.
-4. **Convertir al formato que espera nuestro driver (`psycopg` v3):**
-   - Cambiar el prefijo `postgresql://` → `postgresql+psycopg://`
-   - Dejar todos los query params (`sslmode=require&channel_binding=require`) intactos — psycopg v3 los soporta.
-   - Resultado:
-     ```
-     postgresql+psycopg://<USER>:<PASSWORD>@ep-<slug>-pooler.<region>.aws.neon.tech/<DB>?sslmode=require&channel_binding=require
-     ```
-5. **Guardar esta string** — la vas a usar en Railway y localmente para migrar.
+4. **Eso es todo — úsala tal cual.** El backend normaliza automáticamente el prefijo para usar el driver `psycopg` v3 (ver `app/db/session.py`). No tienes que transformarla.
+   > **Nota:** si el `<region>` del hostname no coincide con la región que elegiste en la UI, es normal — Neon asigna el compute pool disponible más cercano.
 
 ### Generar el schema en Neon
 
-Opción A (rápida — usa SQLAlchemy `create_all`):
+Una sola línea desde tu máquina (reemplaza `<NEON_URL>` por la string del paso 3):
 ```bash
-cd api
-source .venv/bin/activate
-DATABASE_URL="postgresql+psycopg://...@ep-xxxx.neon.tech/neondb?sslmode=require" \
-  python -c "from app.db.base import Base; from app.db.session import engine; \
-             import app.models.api_key, app.models.budget, app.models.note, app.models.status_change; \
-             Base.metadata.create_all(engine); print('schema creado')"
-```
-
-Opción B (profesional — Alembic, cuando quieras versionar migraciones):
-```bash
-cd api
-alembic init alembic                  # solo la primera vez
-# editar alembic/env.py: target_metadata = Base.metadata
-alembic revision --autogenerate -m "initial schema"
-DATABASE_URL="..." alembic upgrade head
+cd api && source .venv/bin/activate
+DATABASE_URL="<NEON_URL>" python -c "from app.db.base import Base; from app.db.session import engine; import app.models.api_key, app.models.budget, app.models.note, app.models.status_change; Base.metadata.create_all(engine); print('schema creado ✅')"
 ```
 
 ### (Opcional) Seedear data demo en Neon
 
 ```bash
-DATABASE_URL="postgresql+psycopg://...@ep-xxxx.neon.tech/neondb?sslmode=require" \
-  python cli.py seed --reset
+DATABASE_URL="<NEON_URL>" python cli.py seed --reset
 ```
 Copiar la key `Dashboard Admin (demo)` que imprime — la vas a usar en el dashboard más adelante.
 
