@@ -26,6 +26,14 @@ build/
 
 # API Keys y artefactos runtime
 ADMIN_KEY.txt
+# Notas personales con credenciales (archivos sueltos con "key", "apikey", "secret" en el nombre)
+*apikey*
+*api-key*
+*api_key*
+*secret*
+*credentials*
+admin*.md
+admin*.txt
 
 # === Databases locales ===
 *.db
