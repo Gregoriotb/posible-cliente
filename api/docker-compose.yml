@@ -1,0 +1,19 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: sqlite:////data/artificialic.db
+      CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
+      RATE_LIMIT_DEFAULT: "60"
+      BOOTSTRAP_ADMIN_ON_EMPTY: "true"
+      ENABLE_DOCS: "true"
+      ENVIRONMENT: development
+    volumes:
+      - api_data:/data
+      - ./:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+volumes:
+  api_data:
