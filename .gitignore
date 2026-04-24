@@ -1,0 +1,55 @@
+# === Python ===
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+env/
+
+# === Node / frontend ===
+node_modules/
+dist/
+build/
+.vite/
+
+# === Env / secrets ===
+.env
+.env.local
+.env.*.local
+# Pero SÍ tracker los ejemplos:
+!.env.example
+
+# API Keys y artefactos runtime
+ADMIN_KEY.txt
+
+# === Databases locales ===
+*.db
+*.sqlite
+*.sqlite3
+
+# === Editor / IDE ===
+# .vscode/mcp.json contiene tokens personales — jamás commitear
+.vscode/mcp.json
+.idea/
+*.swp
+*.swo
+*~
+
+# === OS ===
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# === Logs ===
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# === Build artifacts ===
+*.tsbuildinfo
