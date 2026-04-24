@@ -42,10 +42,15 @@ api.interceptors.response.use(
     const detailStr = typeof detail === "string" ? detail : JSON.stringify(detail);
 
     if (status === 401) {
+      // Sesión inválida/expirada — limpiamos y mandamos al login.
+      clearStoredApiKey();
       if (!didToast401) {
         didToast401 = true;
         setTimeout(() => (didToast401 = false), 3000);
-        toast.error("API Key inválida. Revisa Configuración.", { duration: 4000 });
+        toast.error("Sesión expirada. Inicia sesión de nuevo.", { duration: 4000 });
+      }
+      if (typeof window !== "undefined" && window.location.pathname !== "/login") {
+        window.location.href = "/login";
       }
     } else if (status === 403) {
       toast.error(`Permisos insuficientes: ${detailStr}`);

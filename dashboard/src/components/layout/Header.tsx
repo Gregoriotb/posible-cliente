@@ -1,4 +1,7 @@
-import { Bell, Menu, PanelLeftClose, PanelLeftOpen, User } from "lucide-react";
+import { Bell, LogOut, Menu, PanelLeftClose, PanelLeftOpen, User } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { clearStoredApiKey } from "@/api/client";
 import { cn } from "@/lib/cn";
 
 interface HeaderProps {
@@ -16,6 +19,14 @@ export function Header({
   connectionStatus = "unknown",
   scopes = [],
 }: HeaderProps) {
+  const navigate = useNavigate();
+
+  const logout = () => {
+    clearStoredApiKey();
+    toast.success("Sesión cerrada");
+    navigate("/login", { replace: true });
+  };
+
   return (
     <header className="h-16 border-b border-ai-border bg-white/80 backdrop-blur-md sticky top-0 z-40 flex items-center px-4 gap-3">
       {/* Mobile: hamburger */}
@@ -79,6 +90,16 @@ export function Header({
         <span className="h-8 w-8 rounded-full bg-ai-gradient flex items-center justify-center text-white">
           <User className="h-4 w-4" />
         </span>
+      </button>
+
+      <button
+        type="button"
+        onClick={logout}
+        className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-ai-text-muted hover:bg-ai-surface hover:text-ai-danger"
+        aria-label="Cerrar sesión"
+        title="Cerrar sesión"
+      >
+        <LogOut className="h-4 w-4" />
       </button>
     </header>
   );

@@ -5,13 +5,13 @@ from fastapi import FastAPI, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
+from app.core.limiter import limiter
 from app.core.logging_filter import install_redaction
 from app.db.base import Base
 from app.db.session import engine
@@ -22,18 +22,6 @@ logging.basicConfig(
 )
 install_redaction()
 logger = logging.getLogger(__name__)
-
-
-def _rate_limit_key(request: Request) -> str:
-    """Prefer API key id (attached by dependency) over client IP."""
-    api_key = getattr(request.state, "api_key", None)
-    if api_key is not None:
-        return f"key:{api_key.id}"
-    client = request.client
-    return f"ip:{client.host}" if client else "ip:unknown"
-
-
-limiter = Limiter(key_func=_rate_limit_key, default_limits=[])
 
 
 @asynccontextmanager
@@ -105,9 +93,10 @@ async def unhandled_handler(request: Request, exc: Exception):
     return JSONResponse(status_code=500, content={"detail": "Internal server error"})
 
 
-from app.routes import admin, analytics, dashboard, ingest, meta
+from app.routes import admin, analytics, auth, dashboard, ingest, meta
 
 app.include_router(meta.router, prefix="/v1", tags=["meta"])
+app.include_router(auth.router, prefix="/v1", tags=["auth"])
 app.include_router(ingest.router, prefix="/v1", tags=["ingest"])
 app.include_router(dashboard.router, prefix="/v1", tags=["dashboard"])
 app.include_router(analytics.router, prefix="/v1", tags=["analytics"])

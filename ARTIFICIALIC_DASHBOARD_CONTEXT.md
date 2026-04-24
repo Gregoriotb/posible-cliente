@@ -647,13 +647,30 @@ dashboard/src/
 ## 9. SUB-CONTEXTO 6: CONFIGURACIÓN & SETTINGS (SC-006)
 
 ### Scope
-Página de configuración con tres responsabilidades: (a) ingresar admin API key, (b) **gestionar API Keys de consumers** (las que entregamos a Artificialic), (c) preferencias UI.
+Página de configuración con tres responsabilidades: (a) mostrar info de la sesión activa + logout, (b) **gestionar API Keys de consumers** (las que entregamos a Artificialic), (c) preferencias UI.
+
+### Auth del dashboard — login tradicional
+El dashboard se autentica con **usuario y contraseña**, no pegando una API key manualmente. Flujo:
+
+1. `/login` → formulario con `username` + `password`.
+2. `POST /v1/auth/login` en el backend valida credenciales contra env vars (`ADMIN_USERNAME` + `ADMIN_PASSWORD`, comparación timing-safe con `hmac.compare_digest`, rate limit 5/min).
+3. En 200 OK, el backend devuelve el plaintext de `ADMIN_API_KEY` (env var) + el username.
+4. El frontend lo guarda en localStorage (`artf_admin_key`) como antes — el resto del dashboard sigue funcionando igual con X-API-Key en cada request.
+5. Logout: limpia localStorage + redirige a `/login`.
+6. 401 global en cualquier request → limpia sesión y redirige a login.
+
+**Ventajas vs paste-key:**
+- El usuario final jamás ve ni toca el plaintext de la key.
+- Credenciales en env vars encriptadas at rest en Railway.
+- Rotación de admin key = cambiar env var + redeploy (ni tocar el navegador).
+- Password débil toleraable en demo; rate limit 5/min mitiga brute force.
+
+**Seguridad:** mensaje de error idéntico para "usuario equivocado" y "contraseña equivocada" (no leak de qué campo falló). Si las 3 env vars no están seteadas en el backend, `POST /v1/auth/login` devuelve `503` con mensaje claro.
 
 ### Especificaciones
 - **Tab 1: Mi Conexión**
-  - Input para admin API key + botón "Probar Conexión" (GET `/v1/me`).
-  - Badge con scopes detectados al validar.
-  - Indicador verde/rojo de estado.
+  - Info de la sesión activa (nombre de la cuenta, scopes, rate limit, último uso).
+  - Botón de **cerrar sesión**.
 - **Tab 2: API Keys** (visible solo si scope `admin` detectado)
   - Lista de keys: name, prefix (`artf_live_abc123...`), scopes (chips), last_used_at, status, acciones (Revocar, Rotar).
   - Botón "Nueva Key" → modal con form (name, scopes checkboxes, rate_limit, expires_at opcional).

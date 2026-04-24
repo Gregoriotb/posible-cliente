@@ -1,12 +1,12 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { useQueryClient } from "@tanstack/react-query";
-import { Check, Copy, KeyRound, Plus, RefreshCw, ShieldCheck, Trash2, X } from "lucide-react";
-import { clearStoredApiKey, getStoredApiKey, setStoredApiKey } from "@/api/client";
+import { Check, Copy, LogOut, Plus, RefreshCw, ShieldCheck, Trash2, X } from "lucide-react";
+import { clearStoredApiKey } from "@/api/client";
 import { useApiKeys, useCreateApiKey, useMe, useRevokeApiKey, useRotateApiKey } from "@/hooks/useAdmin";
 import type { ApiKey, ApiKeyCreated, Scope } from "@/api/types";
 import { cn } from "@/lib/cn";
-import { formatDateShort, formatRelative } from "@/lib/format";
+import { formatRelative } from "@/lib/format";
 
 export function SettingsPage() {
   const [tab, setTab] = useState<"connection" | "keys" | "about">("connection");
@@ -69,72 +69,24 @@ function TabBtn({
 }
 
 function ConnectionTab() {
-  const [input, setInput] = useState(() => getStoredApiKey() ?? "");
-  const me = useMe(!!input);
-  const qc = useQueryClient();
+  const me = useMe();
+  const navigate = useNavigate();
 
-  const save = () => {
-    const trimmed = input.trim();
-    if (!trimmed.startsWith("artf_")) {
-      toast.error("La API Key debe comenzar con artf_live_ o artf_test_");
-      return;
-    }
-    setStoredApiKey(trimmed);
-    qc.invalidateQueries({ queryKey: ["me"] });
-    toast.success("API Key guardada. Probando conexión...");
-  };
-
-  const clear = () => {
+  const logout = () => {
     clearStoredApiKey();
-    setInput("");
-    qc.invalidateQueries({ queryKey: ["me"] });
-    toast.info("API Key eliminada.");
+    toast.success("Sesión cerrada");
+    navigate("/login", { replace: true });
   };
 
   return (
     <section className="space-y-6">
-      <div className="bg-white rounded-xl border border-ai-border p-5">
-        <h2 className="font-semibold text-ai-text flex items-center gap-2">
-          <KeyRound className="h-5 w-5 text-ai-secondary" />
-          Admin API Key
-        </h2>
-        <p className="text-sm text-ai-text-muted mt-1">
-          Pega aquí tu admin key. Se guarda en localStorage (solo en este navegador) y se envía como{" "}
-          <code className="bg-ai-surface px-1 rounded">X-API-Key</code> en cada request.
-        </p>
-        <div className="mt-4 flex flex-col sm:flex-row gap-2">
-          <input
-            type="password"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="artf_live_..."
-            className="flex-1 border border-ai-border rounded-md px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ai-primary"
-          />
-          <button
-            onClick={save}
-            className="inline-flex items-center justify-center px-4 py-2 bg-ai-primary text-white text-sm font-medium rounded-md hover:bg-ai-primary-dark transition-colors"
-          >
-            Guardar y probar
-          </button>
-          {input && (
-            <button
-              onClick={clear}
-              className="inline-flex items-center justify-center px-4 py-2 border border-ai-border text-ai-text-muted text-sm font-medium rounded-md hover:bg-ai-surface"
-            >
-              Limpiar
-            </button>
-          )}
-        </div>
-      </div>
-
       {me.data && (
         <div className="bg-white rounded-xl border border-ai-border p-5">
           <h3 className="font-semibold text-ai-text flex items-center gap-2">
-            <ShieldCheck className="h-5 w-5 text-ai-primary" /> Conectado
+            <ShieldCheck className="h-5 w-5 text-ai-primary" /> Sesión activa
           </h3>
           <dl className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-sm">
-            <Row label="Nombre" value={me.data.name} />
-            <Row label="Prefijo" value={<code className="bg-ai-surface px-1 rounded">{me.data.prefix}…</code>} />
+            <Row label="Cuenta" value={me.data.name} />
             <Row
               label="Scopes"
               value={
@@ -152,15 +104,26 @@ function ConnectionTab() {
               label="Último uso"
               value={me.data.last_used_at ? formatRelative(me.data.last_used_at) : "—"}
             />
-            <Row label="Creada" value={formatDateShort(me.data.created_at)} />
           </dl>
+
+          <div className="mt-5 pt-4 border-t border-ai-border flex items-center justify-between">
+            <p className="text-xs text-ai-text-muted">
+              La sesión se guarda en este navegador. Ciérrala si compartes el equipo.
+            </p>
+            <button
+              onClick={logout}
+              className="inline-flex items-center gap-2 px-3 py-1.5 text-sm border border-ai-border rounded-md hover:bg-red-50 hover:text-ai-danger hover:border-red-200 transition-colors"
+            >
+              <LogOut className="h-4 w-4" />
+              Cerrar sesión
+            </button>
+          </div>
         </div>
       )}
 
-      {me.isError && input && (
+      {me.isError && (
         <div className="bg-red-50 border border-red-200 rounded-xl p-5 text-red-800 text-sm">
-          No se pudo validar la API Key. Revisa que sea correcta y que el backend esté corriendo en{" "}
-          <code>{import.meta.env.VITE_API_URL}</code>.
+          No se pudo cargar la sesión. Intenta cerrar sesión y volver a entrar.
         </div>
       )}
     </section>

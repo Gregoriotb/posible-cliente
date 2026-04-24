@@ -12,6 +12,12 @@ os.environ.setdefault("BOOTSTRAP_ADMIN_ON_EMPTY", "false")
 os.environ.setdefault("DATABASE_URL", "sqlite:///:memory:")
 
 import pytest
+
+# Desactivar slowapi en tests (muchos tests en serie contra mismo endpoint
+# saltarían el rate limit). En prod sigue activo.
+from app.core.limiter import limiter as _limiter
+
+_limiter.enabled = False
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker

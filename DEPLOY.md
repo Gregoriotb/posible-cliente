@@ -60,7 +60,12 @@ Copiar la key `Dashboard Admin (demo)` que imprime — la vas a usar en el dashb
    | `BOOTSTRAP_ADMIN_ON_EMPTY` | `true` *(solo primer deploy — cambiar a `false` después)* |
    | `ENABLE_DOCS` | `false` *(oculta Swagger en prod)* |
    | `ENVIRONMENT` | `production` |
+   | `ADMIN_USERNAME` | usuario del dashboard (ej: `gregoriotb`) |
+   | `ADMIN_PASSWORD` | contraseña del dashboard (8+ chars, mixto recomendado) |
+   | `ADMIN_API_KEY` | plaintext de la admin key generada por bootstrap (paso 6) — se agrega al final |
    | `PORT` | *automático por Railway* |
+
+   > `ADMIN_USERNAME`/`ADMIN_PASSWORD`/`ADMIN_API_KEY` habilitan el login tradicional del dashboard. Si faltan, `/v1/auth/login` devuelve 503 y no podrás ingresar desde el UI. Pones las primeras dos ahora; la tercera la completas después del primer deploy cuando tengas la admin key del bootstrap.
 
 5. **Deploy**. Esperar ~2 min el primer build.
 6. En **Deployments > Logs** buscar el banner:
