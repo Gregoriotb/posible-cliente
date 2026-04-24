@@ -19,15 +19,17 @@
 
 1. Crear cuenta en [neon.tech](https://neon.tech) (free tier: 0.5 GB + 190h compute/mes).
 2. **New Project** → nombre: `artificialic-budget` → región: la más cercana al backend (ej `aws-us-east-2`).
-3. En **Dashboard > Connection Details**, copiar la connection string. Formato crudo:
+3. En **Dashboard > Connection Details**, activar **"Connection pooling"** (recomendado) y copiar la connection string. Formato crudo que entrega Neon:
    ```
-   postgresql://USER:PASS@ep-xxxx-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require
+   postgresql://<USER>:<PASSWORD>@ep-<slug>-pooler.<region>.aws.neon.tech/<DB>?sslmode=require&channel_binding=require
    ```
+   > **Nota:** el `<region>` que aparece en el hostname puede no coincidir con la región que elegiste en la UI (p.ej. elegiste `us-east-2` y el hostname dice `us-east-1`). Es esperado — Neon asigna el compute pool más cercano disponible. El servicio funciona igual; no lo toques.
 4. **Convertir al formato que espera nuestro driver (`psycopg` v3):**
-   - Cambiar `postgresql://` → `postgresql+psycopg://`
+   - Cambiar el prefijo `postgresql://` → `postgresql+psycopg://`
+   - Dejar todos los query params (`sslmode=require&channel_binding=require`) intactos — psycopg v3 los soporta.
    - Resultado:
      ```
-     postgresql+psycopg://USER:PASS@ep-xxxx-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require
+     postgresql+psycopg://<USER>:<PASSWORD>@ep-<slug>-pooler.<region>.aws.neon.tech/<DB>?sslmode=require&channel_binding=require
      ```
 5. **Guardar esta string** — la vas a usar en Railway y localmente para migrar.
 
